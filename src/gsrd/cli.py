@@ -31,7 +31,6 @@ from .simulate import (
     InstabilityError,
     SimError,
     TimeStepError,
-    TrivialStateError,
     simulate,
 )
 
@@ -177,8 +176,6 @@ def main() -> None:
         fail("temporal increment non-physical")
     except InstabilityError:
         fail("field values departed manifold")
-    except TrivialStateError:
-        fail("solution converged to null regime")
     except SimError:
         fail("internal condition not handled")
     except Exception:

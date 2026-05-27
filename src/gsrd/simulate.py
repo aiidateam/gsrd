@@ -42,10 +42,6 @@ class InstabilityError(SimError):
     """Raised when NaN/Inf appears during integration, or initial-field shapes mismatch."""
 
 
-class TrivialStateError(SimError):
-    """Raised when the final variance of V is below threshold."""
-
-
 def laplacian(Z: NDArray[np.floating]) -> NDArray[np.floating]:
     return (
         -4 * Z
@@ -62,6 +58,25 @@ def simulate(
     u_init: NDArray[np.floating] | None = None,
     v_init: NDArray[np.floating] | None = None,
 ) -> tuple[NDArray[np.floating], NDArray[np.floating], float, float]:
+    """Integrate the Gray-Scott system and return the final state.
+
+    :param params: Simulation parameters; see :class:`SimParams`.
+    :param progress: Optional callback invoked as ``progress(step, total)``
+        roughly 20 times over the run.
+    :param u_init: Optional initial U field of shape ``(grid_size, grid_size)``.
+        Ignored unless ``v_init`` is passed as well.
+    :param v_init: Optional initial V field, as for ``u_init``.
+    :return: ``(U, V, var_v, mean_v)``. A near-zero ``var_v`` means the V field
+        decayed to a flat, patternless "trivial steady state", which is the
+        legitimate outcome for Gray-Scott parameters outside the pattern-forming
+        band rather than a failure. Callers that need to classify such runs
+        should compare ``var_v`` against a threshold of their choosing; note it
+        can underflow to exactly ``0.0``, so a log-scale consumer must floor it.
+    :raises DiffusionError: If ``du`` or ``dv`` is not positive.
+    :raises TimeStepError: If ``dt`` is not positive.
+    :raises InstabilityError: If NaN/Inf appears during integration, or the
+        initial fields do not match ``grid_size``.
+    """
     n: int = params["grid_size"]
     du: float = params["du"]
     dv: float = params["dv"]
@@ -109,8 +124,5 @@ def simulate(
 
     var_v: float = float(np.var(V))
     mean_v: float = float(np.mean(V))
-
-    if var_v < 1e-8:
-        raise TrivialStateError("Trivial steady state (no pattern formed)")
 
     return U, V, var_v, mean_v

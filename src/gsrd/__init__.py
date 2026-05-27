@@ -8,7 +8,6 @@ from .simulate import (
     SimError,
     SimParams,
     TimeStepError,
-    TrivialStateError,
     laplacian,
     simulate,
 )
@@ -20,7 +19,6 @@ __all__ = [
     "SimError",
     "SimParams",
     "TimeStepError",
-    "TrivialStateError",
     "__version__",
     "laplacian",
     "simulate",
