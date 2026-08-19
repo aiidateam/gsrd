@@ -4,9 +4,9 @@ Run from a checkout of this repository::
 
     uv run --extra gallery python gallery/generate.py
 
-Writes ``showcase.png``, ``fields.png``, ``dissolved.png`` and ``heatmap.png``
-into this directory. All single-field snapshots share one resolution so the
-gallery looks uniform wherever the images are embedded.
+Writes ``showcase.png`` (a 2x2 grid of four distinct patterns), ``fields.png``,
+``dissolved.png`` and ``heatmap.png`` into this directory. The single-field
+snapshots share one resolution so the gallery looks uniform wherever embedded.
 """
 
 import os
@@ -87,6 +87,20 @@ def save_field(field: NDArray[np.floating], *, cmap: str, name: str) -> None:
     print(f"wrote {name}")
 
 
+def save_field_grid(
+    fields: list[NDArray[np.floating]], *, cmap: str, name: str
+) -> None:
+    """Save four fields as a borderless 2x2 grid of square panels."""
+    fig, axes = plt.subplots(2, 2, figsize=(8, 8))
+    for ax, field in zip(axes.flat, fields):
+        ax.imshow(field, cmap=cmap, origin="lower")
+        ax.set_axis_off()
+    fig.subplots_adjust(left=0, right=1, top=1, bottom=0, wspace=0.02, hspace=0.02)
+    fig.savefig(OUT / name, dpi=DPI)
+    plt.close(fig)
+    print(f"wrote {name}")
+
+
 def save_field_pair(
     u: NDArray[np.floating], v: NDArray[np.floating], *, name: str
 ) -> None:
@@ -126,9 +140,15 @@ def save_heatmap(variance: NDArray[np.floating], *, name: str) -> None:
 
 
 def main() -> None:
-    # Showcase: a fully developed spot pattern (module 3a 'spots').
-    _, v, _ = run(F=0.030, k=0.062)
-    save_field(v, cmap="magma", name="showcase.png")
+    # Showcase: four visually distinct patterns from the F x k scan, to open module 0 with
+    # the variety of structures the Gray-Scott model produces (spots, labyrinth, waves, rosette).
+    showcase = [
+        run(F=0.038, k=0.065)[1],
+        run(F=0.038, k=0.063)[1],
+        run(F=0.062, k=0.059)[1],
+        run(F=0.062, k=0.063)[1],
+    ]
+    save_field_grid(showcase, cmap="magma", name="showcase.png")
 
     # Dissolved: outside the pattern-forming band, where V decays to a flat field.
     _, v, _ = run(F=0.050, k=0.060)
