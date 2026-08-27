@@ -101,23 +101,6 @@ def save_field_grid(
     print(f"wrote {name}")
 
 
-def save_field_pair(
-    u: NDArray[np.floating], v: NDArray[np.floating], *, name: str
-) -> None:
-    """Save the U and V fields of one run side by side."""
-    fig, (ax_u, ax_v) = plt.subplots(1, 2, figsize=(8, 4))
-    ax_u.imshow(u, cmap="viridis", origin="lower")
-    ax_u.set_title("U field")
-    ax_u.set_axis_off()
-    ax_v.imshow(v, cmap="inferno", origin="lower")
-    ax_v.set_title("V field")
-    ax_v.set_axis_off()
-    fig.tight_layout()
-    fig.savefig(OUT / name, dpi=DPI)
-    plt.close(fig)
-    print(f"wrote {name}")
-
-
 def save_heatmap(variance: NDArray[np.floating], *, name: str) -> None:
     """Save the F x k variance scan as a log-scale heatmap with a colourbar."""
     fig, ax = plt.subplots(figsize=(6, 4.5))
@@ -154,9 +137,10 @@ def main() -> None:
     _, v, _ = run(F=0.050, k=0.060)
     save_field(v, cmap="magma", name="dissolved.png")
 
-    # Fields: U and V side by side, inside the band so both show structure.
-    u, v, _ = run(F=0.040, k=0.060)
-    save_field_pair(u, v, name="fields.png")
+    # Fields: the V field inside the band, in the same style as dissolved.png so
+    # the tutorial can pair them as an equal-size below/above transition figure.
+    _, v, _ = run(F=0.040, k=0.060)
+    save_field(v, cmap="magma", name="fields.png")
 
     save_heatmap(scan_variance(), name="heatmap.png")
 
